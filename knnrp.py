@@ -1,7 +1,11 @@
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import MinMaxScaler
 
 
 df = pd.read_csv("insurance.csv")
@@ -27,10 +31,27 @@ print(targets.head())
 
 features_train, features_test, targets_train, targets_test = train_test_split(features, targets, test_size=0.2, random_state=10)
 
-knnr = KNeighborsRegressor(n_neighbors=2)
-knnr.fit(features_train, targets_train) 
+categorical_features = ["sex", "smoker", "region"]
 
-predictions = knnr.predict(features_test)
+
+numeric_features = ["age", "bmi", "children"]
+
+preprocessor = ColumnTransformer(
+    transformers=[("cat", OneHotEncoder(), categorical_features ) , ("num", MinMaxScaler(), numeric_features)
+]
+)
+
+preprocessed_features_train = preprocessor.fit_transform(features_train)
+
+preprocessed_features_test = preprocessor.transform(features_test)
+
+
+
+knnr = KNeighborsRegressor(n_neighbors=8)
+knnr.fit(preprocessed_features_train, targets_train) 
+
+predictions = knnr.predict(preprocessed_features_test)
+
 
 
 #Previous code omitted. 
@@ -46,3 +67,10 @@ print(f"MSE: {mse:.3f}")
 #Compute the Root Mean Squared Error (RMSE):
 rmse = np.sqrt(mse)
 print(f"RMSE: {rmse:.3f}")
+
+
+
+
+
+
+
